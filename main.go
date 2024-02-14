@@ -1,38 +1,43 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
+	"fmt"
+	"io"
 	"log"
-	"net/http"
+	"os"
 )
 
-func home_response(response http.ResponseWriter, request *http.Request) {
-	log.Printf("[INFO] Request From %s", request.URL.Path)
-
-	if request.URL.Path != "/" {
-		http.NotFound(response, request)
-		return
-	}
-
-	data := map[string]interface{}{
-		"Greatings": []string{"hello man You are cool", "Hello you Look Funny"},
-	}
-
-	json_data, err := json.Marshal(data)
+func json_file(file_name string) []byte {
+	file, err := os.Open("main.json") // For read access.
 	if err != nil {
-		http.Error(response, "Json Error", 501)
-		return
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	var maxSize int = 4
+
+	var byteChunk = make([]byte, maxSize)
+
+	fmt.Println(file.Stat())
+
+	// var rawData []byte
+
+	for {
+		// readTotal, err := file.Read(byteChunk)
+		_, err := file.Read(byteChunk)
+		if err != nil {
+			if err != io.EOF {
+				log.Fatal(err)
+			}
+			break
+		}
+		fmt.Print(byteChunk)
 	}
 
-	response.Header().Set("content-type", "application/json")
-	response.Write([]byte(json_data))
+	return nil
 }
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home_response)
-
-	log.Println("Starting Server On :8000")
-	err := http.ListenAndServe(":8000", mux)
-	log.Fatal(err)
+	json_file("./main.json")
 }
