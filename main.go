@@ -2,42 +2,64 @@ package main
 
 import (
 	// "encoding/json"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 )
 
-func json_file(file_name string) []byte {
+func json_file(file_name string) (jsonData map[string]interface{}, err error) {
+	/* var jsonData map[string]interface{} */
+
 	file, err := os.Open("main.json") // For read access.
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
-	defer file.Close()
 
 	var maxSize int = 4
 
 	var byteChunk = make([]byte, maxSize)
 
-	fmt.Println(file.Stat())
+	// fmt.Println(file.Stat())
 
-	// var rawData []byte
+	var rawData []byte
 
 	for {
 		// readTotal, err := file.Read(byteChunk)
-		_, err := file.Read(byteChunk)
+		_, err = file.Read(byteChunk)
 		if err != nil {
 			if err != io.EOF {
-				log.Fatal(err)
+				return
 			}
 			break
 		}
+
+		fmt.Print("ChunkStart\n")
 		fmt.Print(byteChunk)
+		fmt.Print("\nChunkEND\n")
+		if string(byteChunk) != string("]") {
+			rawData = append(rawData, byteChunk...)
+		}
 	}
 
-	return nil
+	println(string(rawData))
+
+	err = json.Unmarshal(rawData, &jsonData)
+	if err != nil {
+		log.Println("json")
+		return
+	}
+
+	return
 }
 
 func main() {
-	json_file("./main.json")
+	data, err := json_file("./main.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(data)
 }
